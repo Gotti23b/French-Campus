@@ -255,7 +255,9 @@
     history.replaceState(null,'','#'+id);
   }
   document.querySelectorAll('.nav-item[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));\n  document.querySelectorAll('.see-all').forEach(b=>b.addEventListener('click',()=>{const t=b.textContent.toLowerCase();showPage(t.includes('calendario')?'calendario':t.includes('actividades')?'actividades':t.includes('todas')&&b.closest('section')?.textContent.includes('materias')?'materias':t.includes('todas')?'novedades':'materias')}));\n  document.querySelectorAll('.hero-button').forEach(b=>{b.style.cursor='pointer';b.addEventListener('click',()=>showPage('materias'))});
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
+  document.querySelectorAll('.see-all').forEach(b=>b.addEventListener('click',()=>{const t=b.textContent.toLowerCase();showPage(t.includes('calendario')?'calendario':t.includes('actividades')?'actividades':t.includes('todas')&&b.closest('section')?.textContent.includes('materias')?'materias':t.includes('todas')?'novedades':'materias')}));
+  document.querySelectorAll('.hero-button').forEach(b=>{b.style.cursor='pointer';b.addEventListener('click',()=>showPage('materias'))});
   const initial=location.hash.slice(1);
   if(pageNames[initial]) showPage(initial);
 </script>
