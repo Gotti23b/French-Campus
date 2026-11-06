@@ -1,24 +1,29 @@
 # French Campus
 
-**Versión:** 0.0.1  
-**Estado:** prototipo visual (interfaz estática)
+**Versión:** 0.0.2  
+**Estado:** prototipo visual interactivo (sin backend)
 
 French Campus es una propuesta de campus virtual para el Colegio French.
 
-## Vista actual
+## Secciones disponibles
 
-La primera pantalla presenta un panel de estudiante con:
-- Navegación lateral.
-- Bienvenida y resumen del ciclo lectivo.
-- Accesos visuales a materias.
-- Horario de clases de ejemplo.
-- Actividades y novedades de ejemplo.
-- Diseño adaptable a computadoras, tablets y celulares.
+- Inicio: panel principal del estudiante.
+- Mis materias: tarjetas de materias.
+- Actividades: listado visual de tareas.
+- Calendario: vista mensual de ejemplo.
+- Materiales: biblioteca organizada por materias.
+- Mensajes: pantalla de demostración.
+- Novedades: comunicados del colegio.
+- Información: presentación del campus.
+
+## Interfaz
+
+La navegación entre secciones funciona en la misma página, sin recargar el sitio. Incluye menú lateral en escritorio y barra de navegación inferior en celulares. El diseño se adapta a computadoras, tablets y teléfonos.
 
 ## Importante
 
-Esta versión es únicamente una maqueta visual. Los botones y secciones todavía no tienen funciones reales, no hay cuentas, datos personales, conexión a una base de datos ni contenido institucional real.
+Esta versión es una maqueta visual. Los datos son de ejemplo y no hay cuentas, mensajes reales, entregas, almacenamiento, conexión a una base de datos ni contenido institucional verificado. Los controles que representan esas funciones todavía no ejecutan acciones reales.
 
 ## Ver la interfaz
 
-Abrí `index.html` en un navegador. Si GitHub Pages está habilitado, también se podrá publicar como sitio estático desde la configuración del repositorio.
+Abrí `index.html` en un navegador. Si GitHub Pages está habilitado, también se puede publicar como sitio estático desde la configuración del repositorio.
