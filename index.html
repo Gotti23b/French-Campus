@@ -33,23 +33,24 @@
     <div class="school-pill"><div class="school-icon">🏫</div><div><strong>Colegio French</strong><span>Campus educativo</span></div></div>
     <div class="nav-label">MENÚ PRINCIPAL</div>
     <nav class="nav">
-      <div class="nav-item active"><span class="ico">⌂</span><span class="nav-text">Inicio</span></div>
-      <div class="nav-item"><span class="ico">▦</span><span class="nav-text">Mis materias</span></div>
-      <div class="nav-item"><span class="ico">▤</span><span class="nav-text">Actividades</span></div>
-      <div class="nav-item"><span class="ico">▣</span><span class="nav-text">Calendario</span></div>
-      <div class="nav-item"><span class="ico">▧</span><span class="nav-text">Materiales</span></div>
-      <div class="nav-item"><span class="ico">✉</span><span class="nav-text">Mensajes</span></div>
+      <button class="nav-item active" type="button" data-page="inicio"><span class="ico">⌂</span><span class="nav-text">Inicio</span></button>
+      <button class="nav-item" type="button" data-page="materias"><span class="ico">▦</span><span class="nav-text">Mis materias</span></button>
+      <button class="nav-item" type="button" data-page="actividades"><span class="ico">▤</span><span class="nav-text">Actividades</span></button>
+      <button class="nav-item" type="button" data-page="calendario"><span class="ico">▣</span><span class="nav-text">Calendario</span></button>
+      <button class="nav-item" type="button" data-page="materiales"><span class="ico">▧</span><span class="nav-text">Materiales</span></button>
+      <button class="nav-item" type="button" data-page="mensajes"><span class="ico">✉</span><span class="nav-text">Mensajes</span></button>
     </nav>
     <div class="nav-gap"></div><div class="nav-label">COMUNIDAD</div>
     <nav class="nav">
-      <div class="nav-item"><span class="ico">♧</span><span class="nav-text">Novedades</span></div>
-      <div class="nav-item"><span class="ico">ⓘ</span><span class="nav-text">Información</span></div>
+      <button class="nav-item" type="button" data-page="novedades"><span class="ico">♧</span><span class="nav-text">Novedades</span></button>
+      <button class="nav-item" type="button" data-page="informacion"><span class="ico">ⓘ</span><span class="nav-text">Información</span></button>
     </nav>
     <div class="sidebar-bottom">
       <div class="help-card"><div class="help-icon">💡</div><strong>¿Necesitás ayuda?</strong><p>Encontrá información y orientación para usar el campus.</p><div class="help-link">Centro de ayuda　↗</div></div>
       <div class="profile"><div class="avatar">T</div><div><strong>Mi perfil</strong><span>Estudiante</span></div><div class="dots">···</div></div>
     </div>
   </aside>
+  <nav class="mobile-tabs" aria-label="Navegación del campus"><button type="button" data-page="inicio" class="active"><span>⌂</span><small>Inicio</small></button><button type="button" data-page="materias" class=""><span>▦</span><small>Mis materias</small></button><button type="button" data-page="actividades" class=""><span>▤</span><small>Actividades</small></button><button type="button" data-page="calendario" class=""><span>▣</span><small>Calendario</small></button><button type="button" data-page="materiales" class=""><span>▧</span><small>Materiales</small></button><button type="button" data-page="mensajes" class=""><span>✉</span><small>Mensajes</small></button><button type="button" data-page="novedades" class=""><span>♧</span><small>Novedades</small></button><button type="button" data-page="informacion" class=""><span>ⓘ</span><small>Información</small></button></nav>
   <main class="main">
     <header class="topbar"><div class="crumb">Colegio French　/　<b>Inicio</b></div><div class="top-actions"><div class="term">CICLO LECTIVO 2026　⌄</div><div class="bell">♧</div><div class="mini-avatar">T</div></div></header>
 
@@ -137,7 +138,7 @@
   function showPage(id){
     if(!pageNames[id]) return;
     document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+id));
-    document.querySelectorAll('.nav-item[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+    document.querySelectorAll('.nav-item[data-page], .mobile-tabs button[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
     const crumb=document.querySelector('.crumb');
     if(crumb) crumb.innerHTML='Colegio French　/　<b>'+pageNames[id]+'</b>';
     document.title=pageNames[id]+' — French Campus';
@@ -145,7 +146,7 @@
     history.replaceState(null,'','#'+id);
   }
   document.querySelectorAll('.nav-item[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
-  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));
+  document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.go)));\n  document.querySelectorAll('.see-all').forEach(b=>b.addEventListener('click',()=>{const t=b.textContent.toLowerCase();showPage(t.includes('calendario')?'calendario':t.includes('actividades')?'actividades':t.includes('todas')&&b.closest('section')?.textContent.includes('materias')?'materias':t.includes('todas')?'novedades':'materias')}));\n  document.querySelectorAll('.hero-button').forEach(b=>{b.style.cursor='pointer';b.addEventListener('click',()=>showPage('materias'))});
   const initial=location.hash.slice(1);
   if(pageNames[initial]) showPage(initial);
 </script>
