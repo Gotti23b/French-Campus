@@ -1,6 +1,6 @@
 # French Campus
 
-**Versión:** 0.0.2  
+**Versión:** 0.0.3  
 **Estado:** prototipo visual interactivo (sin backend)
 
 French Campus es una propuesta de campus virtual para el Colegio French.
@@ -18,7 +18,7 @@ French Campus es una propuesta de campus virtual para el Colegio French.
 
 ## Interfaz
 
-La navegación entre secciones funciona en la misma página, sin recargar el sitio. Incluye menú lateral en escritorio y barra de navegación inferior en celulares. El diseño se adapta a computadoras, tablets y teléfonos.
+La navegación entre secciones funciona en la misma página, sin recargar el sitio. Incluye menú lateral en escritorio, barra de navegación inferior en celulares y estilos adaptados para todas las secciones. El diseño se adapta a computadoras, tablets y teléfonos.
 
 ## Importante
 
