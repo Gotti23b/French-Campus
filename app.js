@@ -237,6 +237,26 @@
     return {content,counts};
   }
 
+  function enterStudentPreview(user) {
+    const demo = document.querySelector('.app');
+    if (!demo) return;
+    root.style.display = 'none';
+    document.body.classList.add('fc-student-preview');
+    const banner = document.createElement('div');
+    banner.className = 'fc-preview-banner';
+    banner.innerHTML = '<div><strong>Vista previa de alumno</strong><span>Datos de ejemplo; no son datos reales de estudiantes.</span></div><button id="fc-preview-exit" type="button">Volver a Dirección</button>';
+    document.body.prepend(banner);
+    const exit = document.getElementById('fc-preview-exit');
+    exit.addEventListener('click', async () => {
+      document.body.classList.remove('fc-student-preview');
+      banner.remove();
+      root.style.display = '';
+      await render(user);
+    });
+    if (typeof window.showPage === 'function') window.showPage('inicio');
+    document.title = 'Vista previa de alumno — French Campus';
+  }
+
   async function render(user) {
     const role = user.app_metadata && user.app_metadata.role;
     if (!roles[role]) { pending(user); return; }
@@ -244,8 +264,11 @@
       const profile = await profileFor(user);
       const data = await dashboardData(user,role);
       const stats = data.counts.map(x=>'<div class="fc-stat"><strong>'+esc(x[1])+'</strong><span>'+esc(x[0])+'</span></div>').join('');
-      root.innerHTML = '<main class="fc-dashboard"><header class="fc-top"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-user"><div><strong>'+esc(profile.full_name || user.email)+'</strong><small>'+esc(roles[role])+'</small></div><button id="fc-logout" class="fc-secondary">Salir</button></div></header><section class="fc-welcome"><div class="fc-kicker">CAMPUS VIRTUAL</div><h1>Hola, '+esc((profile.full_name || '¡bienvenido/a!').split(' ')[0])+'</h1><p>Este es tu espacio de actividad en el Colegio French.</p></section><section class="fc-stats">'+stats+'</section><div class="fc-content">'+data.content+'</div><footer class="fc-footer">French Campus · Información visible según los permisos de tu cuenta.</footer></main>';
+      const previewButton = role === 'direccion' ? '<button id="fc-student-preview" class="fc-secondary" type="button">Vista de alumno</button>' : '';
+      root.innerHTML = '<main class="fc-dashboard"><header class="fc-top"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-user"><div><strong>'+esc(profile.full_name || user.email)+'</strong><small>'+esc(roles[role])+'</small></div>'+previewButton+'<button id="fc-logout" class="fc-secondary">Salir</button></div></header><section class="fc-welcome"><div class="fc-kicker">CAMPUS VIRTUAL</div><h1>Hola, '+esc((profile.full_name || '¡bienvenido/a!').split(' ')[0])+'</h1><p>Este es tu espacio de actividad en el Colegio French.</p></section><section class="fc-stats">'+stats+'</section><div class="fc-content">'+data.content+'</div><footer class="fc-footer">French Campus · Información visible según los permisos de tu cuenta.</footer></main>';
       document.getElementById('fc-logout').addEventListener('click',()=>db.auth.signOut());
+      const preview = document.getElementById('fc-student-preview');
+      if (preview) preview.addEventListener('click', () => enterStudentPreview(user));
       attachCommunicationForms(user,role);
     } catch (error) {
       root.innerHTML = '<main class="fc-screen"><section class="fc-card"><h1>No se pudo cargar el campus</h1><p class="fc-muted">'+esc(error.message || 'Error de conexión o permisos.')+'</p><button id="fc-retry" class="fc-primary">Volver a intentar</button><button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
