@@ -117,7 +117,22 @@
   }
 
   function login(message) {
-    root.innerHTML = '<main class="fc-screen"><section class="fc-login"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-kicker">TU ESPACIO ESCOLAR</div><h1>¡Qué bueno verte!</h1><p class="fc-muted">Ingresá con la cuenta que te proporcionó el colegio.</p><form id="fc-login-form" class="fc-form"><label for="fc-email">Correo electrónico</label><input id="fc-email" name="email" type="email" autocomplete="username" required placeholder="Tu correo"><label for="fc-password">Contraseña</label><input id="fc-password" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña"><button class="fc-primary" type="submit">Iniciar sesión</button><p class="fc-message" id="fc-message" role="status">' + esc(message || '') + '</p></form><p class="fc-footnote">Las cuentas son habilitadas por el colegio. No hay registro público.</p></section></main>';
+    root.innerHTML = '<main class="fc-screen"><section class="fc-login"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-kicker">TU ESPACIO ESCOLAR</div><h1>¡Qué bueno verte!</h1><p class="fc-muted">Ingresá con la cuenta autorizada para usar el campus.</p><button id="fc-google-login" type="button" class="fc-primary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#26384b;border:1px solid #dce4ed;box-shadow:0 2px 8px #102b4610"><span style="font-weight:800;font-size:17px;color:#4285f4">G</span> Continuar con Google</button><div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:#8a98a8;font-size:11px"><span style="height:1px;background:#e8edf3;flex:1"></span>O TAMBIÉN<span style="height:1px;background:#e8edf3;flex:1"></span></div><form id="fc-login-form" class="fc-form"><label for="fc-email">Correo electrónico</label><input id="fc-email" name="email" type="email" autocomplete="username" required placeholder="Tu correo"><label for="fc-password">Contraseña</label><input id="fc-password" name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña"><button class="fc-primary" type="submit">Iniciar sesión</button><p class="fc-message" id="fc-message" role="status">' + esc(message || '') + '</p></form><p class="fc-footnote">El acceso requiere autorización de Dirección. No hay registro público.</p></section></main>';
+    document.getElementById('fc-google-login').addEventListener('click', async () => {
+      const button = document.getElementById('fc-google-login');
+      const status = document.getElementById('fc-message');
+      button.disabled = true;
+      button.textContent = 'Conectando con Google…';
+      const { error } = await db.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) {
+        status.textContent = 'No se pudo iniciar con Google. Revisá la configuración o intentá nuevamente.';
+        button.disabled = false;
+        button.innerHTML = '<span style="font-weight:800;font-size:17px;color:#4285f4">G</span> Continuar con Google';
+      }
+    });
     document.getElementById('fc-login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const button = e.currentTarget.querySelector('button');
@@ -135,7 +150,7 @@
   }
 
   function pending(user) {
-    root.innerHTML = '<main class="fc-screen"><section class="fc-card fc-pending"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-pending-icon">⌛</div><h1>Tu cuenta todavía no está habilitada</h1><p class="fc-muted">La cuenta <strong>' + esc(user.email) + '</strong> inició sesión, pero Dirección todavía debe asignarle un rol.</p><p class="fc-footnote">Pedile a Dirección que habilite tu perfil. El rol no se puede elegir desde esta pantalla.</p><button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
+    root.innerHTML = '<main class="fc-screen"><section class="fc-card fc-pending"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-pending-icon">⌛</div><h1>Esperando confirmación de tu usuario</h1><p class="fc-muted">La cuenta <strong>' + esc(user.email) + '</strong> inició sesión correctamente, pero todavía necesita la aprobación de Dirección.</p><p class="fc-footnote">Cuando tu cuenta sea autorizada, vas a poder ingresar al panel que corresponda. No hace falta volver a registrarte.</p><button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
     document.getElementById('fc-logout').addEventListener('click', () => db.auth.signOut());
   }
 
