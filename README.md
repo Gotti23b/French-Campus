@@ -1,6 +1,6 @@
 # French Campus
 
-**Versión:** 0.0.4  
+**Versión:** 0.0.5  
 **Estado:** primera conexión con Supabase y paneles iniciales por rol
 
 French Campus es una propuesta de campus virtual para el Colegio French.
