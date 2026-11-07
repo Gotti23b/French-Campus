@@ -219,6 +219,88 @@
     return result.data;
   }
 
+
+  function studentPortalContent(data) {
+    const subjectNames = [...new Set([
+      ...data.grades.map(x => x.subjects && x.subjects.name),
+      ...data.activities.map(x => x.subjects && x.subjects.name),
+      ...data.materials.map(x => x.subjects && x.subjects.name)
+    ].filter(Boolean))];
+    const subjectCards = subjectNames.map((name, i) => {
+      const icons = ['📐','📖','🧪','🌎','🎨','⚽','🇬🇧','💻'];
+      const tones = ['c-math','c-lang','c-sci','c-hist','c-art','c-sport','c-lang','c-math'];
+      const count = data.activities.filter(x => x.subjects && x.subjects.name === name).length +
+        data.materials.filter(x => x.subjects && x.subjects.name === name).length;
+      return '<article class="fc-student-subject"><span class="fc-student-subject-icon ' + tones[i % tones.length] + '">' + icons[i % icons.length] + '</span><div><strong>' + esc(name) + '</strong><small>' + count + ' recursos y actividades</small></div></article>';
+    }).join('');
+    const activityRows = data.activities.slice(0, 6).map((item, i) =>
+      '<article class="fc-student-list-row"><span class="fc-student-symbol tone-' + (i % 4) + '">▤</span><div class="fc-student-row-copy"><strong>' + esc(item.title) + '</strong><small>' + esc((item.subjects && item.subjects.name || 'Actividad') + ' · ' + (item.courses && item.courses.label || 'Colegio French')) + '</small></div><span class="fc-student-pill">Publicada</span></article>'
+    ).join('');
+    const gradeRows = data.grades.slice(0, 5).map(item =>
+      '<article class="fc-student-list-row"><span class="fc-student-symbol tone-1">✓</span><div class="fc-student-row-copy"><strong>' + esc(item.title) + '</strong><small>' + esc(item.subjects && item.subjects.name || 'Materia') + ' · ' + esc(date(item.recorded_at)) + '</small></div><span class="fc-student-grade">' + esc(item.score) + ' / ' + esc(item.max_score) + '</span></article>'
+    ).join('');
+    const materialRows = data.materials.slice(0, 5).map((item, i) =>
+      '<article class="fc-student-list-row"><span class="fc-student-symbol tone-' + (i % 4) + '">▧</span><div class="fc-student-row-copy"><strong>' + esc(item.title) + '</strong><small>' + esc((item.subjects && item.subjects.name || 'Materia') + ' · ' + (item.courses && item.courses.label || 'Recurso escolar')) + '</small></div><span class="fc-student-arrow">›</span></article>'
+    ).join('');
+    const newsRows = data.news.slice(0, 4).map((item, i) =>
+      '<article class="fc-student-news-row"><span>' + ['📣','📅','📚','🏫'][i % 4] + '</span><div><strong>' + esc(item.title) + '</strong><small>' + esc(date(item.published_at)) + '</small><p>' + esc(item.body || 'Comunicado del Colegio French.') + '</p></div></article>'
+    ).join('');
+    const empty = (message) => '<div class="fc-student-empty">' + esc(message) + '</div>';
+    return '<section class="fc-student-hero"><div class="fc-student-hero-copy"><span>✦ TU ESPACIO ESCOLAR</span><h2>Todo tu recorrido escolar, en un solo lugar.</h2><p>Consultá tus actividades, revisá tus calificaciones y encontrá los materiales de tus materias.</p></div><div class="fc-student-hero-art" aria-hidden="true">📚<i>✦</i></div></section>' +
+      '<section class="fc-student-section" id="student-materias"><div class="fc-student-section-head"><div><span>ESPACIO ACADÉMICO</span><h2>Mis materias</h2></div><b>' + subjectNames.length + '</b></div><div class="fc-student-subject-grid">' + (subjectCards || empty('Todavía no hay materias vinculadas a tus actividades o materiales.')) + '</div></section>' +
+      '<div class="fc-student-two-col"><section class="fc-student-panel" id="student-actividades"><div class="fc-student-section-head"><div><span>ORGANIZÁ TU TRABAJO</span><h2>Actividades</h2></div><b>' + data.activities.length + '</b></div>' + (activityRows || empty('Todavía no hay actividades publicadas.')) + '</section>' +
+      '<section class="fc-student-panel" id="student-calificaciones"><div class="fc-student-section-head"><div><span>SEGUIMIENTO ACADÉMICO</span><h2>Mis calificaciones</h2></div><b>' + data.grades.length + '</b></div>' + (gradeRows || empty('Todavía no hay calificaciones cargadas.')) + '</section></div>' +
+      '<div class="fc-student-two-col"><section class="fc-student-panel" id="student-materiales"><div class="fc-student-section-head"><div><span>RECURSOS DE ESTUDIO</span><h2>Materiales</h2></div><b>' + data.materials.length + '</b></div>' + (materialRows || empty('Todavía no hay materiales publicados.')) + '</section>' +
+      '<section class="fc-student-panel" id="student-novedades"><div class="fc-student-section-head"><div><span>COMUNIDAD FRENCH</span><h2>Novedades del colegio</h2></div><b>' + data.news.length + '</b></div>' + (newsRows || empty('No hay novedades para mostrar.')) + '</section></div>';
+  }
+
+  function studentDashboardMarkup(profile, data, preview) {
+    const firstName = (profile.full_name || 'Estudiante').split(' ')[0];
+    const stats = data.counts.map((item, i) =>
+      '<article class="fc-student-stat"><span class="fc-student-stat-icon tone-' + i + '">' + ['▦','▤','▧','✓'][i] + '</span><div><strong>' + esc(item[1]) + '</strong><small>' + esc(item[0]) + '</small></div></article>'
+    ).join('');
+    return '<main class="fc-student-app"><header class="fc-student-top"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-student-user"><div><strong>' + esc(profile.full_name || 'Estudiante') + '</strong><small>Alumno/a</small></div>' +
+      (preview ? '<button id="fc-preview-exit" class="fc-secondary" type="button">Volver a Dirección</button>' : '<button id="fc-logout" class="fc-secondary" type="button">Salir</button>') +
+      '</div></header><div class="fc-student-layout"><aside class="fc-student-sidebar"><div class="fc-student-school">🏫 <span><strong>Colegio French</strong><small>Campus educativo</small></span></div><nav aria-label="Secciones del campus"><a href="#student-inicio">⌂ <span>Inicio</span></a><a href="#student-materias">▦ <span>Mis materias</span></a><a href="#student-actividades">▤ <span>Actividades</span></a><a href="#student-calificaciones">✓ <span>Calificaciones</span></a><a href="#student-materiales">▧ <span>Materiales</span></a><a href="#student-novedades">♧ <span>Novedades</span></a></nav><div class="fc-student-sidebar-note">Tu espacio para aprender y organizarte.</div></aside><div class="fc-student-main" id="student-inicio"><div class="fc-student-welcome"><div><span>MI CAMPUS · CICLO LECTIVO</span><h1>¡Hola, ' + esc(firstName) + '! 👋</h1><p>Este es tu espacio para aprender, organizarte y estar al día.</p></div><span class="fc-student-date">COLEGIO FRENCH</span></div><section class="fc-student-stats">' + stats + '</section>' + studentPortalContent(data) + '<footer class="fc-student-footer">French Campus · Un espacio para aprender.</footer></div></div></main>';
+  }
+
+  function attachStudentNavigation() {
+    document.querySelectorAll('.fc-student-sidebar a').forEach(link => link.addEventListener('click', event => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        event.preventDefault();
+        target.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    }));
+  }
+
+  function studentPreviewData() {
+    const demoDate = (days) => new Date(Date.now() + days * 86400000).toISOString();
+    const subjects = ['Matemática','Lengua y Literatura','Science','Historia'];
+    const courses = ['1.º año','1.º año','1.º año','1.º año'];
+    return {
+      grades: [
+        {id:'demo-g1',title:'Trabajo práctico',score:8,max_score:10,recorded_at:demoDate(-5),subjects:{name:'Matemática'}},
+        {id:'demo-g2',title:'Science — Practice',score:9,max_score:10,recorded_at:demoDate(-2),subjects:{name:'Science'}}
+      ],
+      activities: [
+        {id:'demo-a1',title:'Resolución de problemas',due_at:demoDate(4),subjects:{name:subjects[0]},courses:{label:courses[0]}},
+        {id:'demo-a2',title:'Lectura y análisis de texto',due_at:demoDate(6),subjects:{name:subjects[1]},courses:{label:courses[1]}},
+        {id:'demo-a3',title:'Science — Practice',due_at:demoDate(8),subjects:{name:subjects[2]},courses:{label:courses[2]}}
+      ],
+      materials: [
+        {id:'demo-m1',title:'Guía de ejercicios',subjects:{name:'Matemática'},courses:{label:'1.º año'}},
+        {id:'demo-m2',title:'Material de estudio',subjects:{name:'Science'},courses:{label:'1.º año'}},
+        {id:'demo-m3',title:'Lecturas de la unidad',subjects:{name:'Lengua y Literatura'},courses:{label:'1.º año'}}
+      ],
+      news: [
+        {id:'demo-n1',title:'Bienvenidos a French Campus',body:'Un nuevo espacio para acompañar tu recorrido escolar.',published_at:demoDate(-1)},
+        {id:'demo-n2',title:'Calendario escolar',body:'Consultá las fechas importantes del ciclo lectivo.',published_at:demoDate(-3)}
+      ],
+      counts: [['Materias',4],['Actividades',3],['Materiales',3],['Calificaciones',2]]
+    };
+  }
+
   async function dashboardData(user, role) {
     let content = '';
     let counts = [];
@@ -229,11 +311,8 @@
         rows(db.from('materials').select('id,title,description,created_at,courses(label),subjects(name)').eq('published',true).order('created_at',{ascending:false})),
         rows(db.from('announcements').select('id,title,body,published_at').order('published_at',{ascending:false}))
       ]);
-      counts = [['Calificaciones',grades.length],['Actividades',activities.length],['Materiales',materials.length]];
-      content = section('Mis calificaciones',grades,(g)=>row((g.subjects && g.subjects.name || 'Materia')+' · '+g.title,'Calificación: '+g.score+' / '+g.max_score,date(g.recorded_at)),'Todavía no hay calificaciones.') +
-        section('Actividades',activities,(a)=>row(a.title,(a.subjects && a.subjects.name || 'Materia')+' · '+(a.courses && a.courses.label || 'Curso')+' · '+(a.description || ''),date(a.due_at)),'No hay actividades publicadas.') +
-        section('Materiales',materials,(m)=>row(m.title,(m.subjects && m.subjects.name || 'Materia')+' · '+(m.courses && m.courses.label || 'Curso'),date(m.created_at)),'No hay materiales publicados.') +
-        section('Novedades',news,(n)=>row(n.title,n.body,date(n.published_at)),'No hay comunicados nuevos.');
+      counts = [['Materias',new Set([...grades,...activities,...materials].map(x=>x.subjects && x.subjects.name).filter(Boolean)).size],['Actividades',activities.length],['Materiales',materials.length],['Calificaciones',grades.length]];
+      content = studentPortalContent({grades,activities,materials,news});
     } else if (role === 'familia') {
       const links = await rows(db.from('guardian_student_links').select('student_id,relationship'));
       const ids = links.map(x=>x.student_id);
@@ -295,23 +374,13 @@
   }
 
   function enterStudentPreview(user) {
-    const demo = document.querySelector('.app');
-    if (!demo) return;
-    root.style.display = 'none';
-    document.body.classList.add('fc-student-preview');
-    const banner = document.createElement('div');
-    banner.className = 'fc-preview-banner';
-    banner.innerHTML = '<div><strong>Vista previa de alumno</strong><span>Datos de ejemplo; no son datos reales de estudiantes.</span></div><button id="fc-preview-exit" type="button">Volver a Dirección</button>';
-    document.body.prepend(banner);
-    const exit = document.getElementById('fc-preview-exit');
-    exit.addEventListener('click', async () => {
-      document.body.classList.remove('fc-student-preview');
-      banner.remove();
-      root.style.display = '';
-      await render(user);
-    });
-    if (typeof window.showPage === 'function') window.showPage('inicio');
+    const data = studentPreviewData();
+    const profile = {full_name:'Vista de ejemplo'};
+    root.innerHTML = '<div class="fc-preview-notice"><div><strong>Vista previa de alumno</strong><span>Estás viendo datos ficticios. No se modificó ninguna cuenta ni información real.</span></div></div>' + studentDashboardMarkup(profile,data,true);
+    document.getElementById('fc-preview-exit').addEventListener('click', () => render(user));
+    attachStudentNavigation();
     document.title = 'Vista previa de alumno — French Campus';
+    window.scrollTo({top:0});
   }
 
   async function render(user) {
@@ -320,6 +389,12 @@
     try {
       const profile = await profileFor(user);
       const data = await dashboardData(user,role);
+      if (role === 'alumno') {
+        root.innerHTML = studentDashboardMarkup(profile,data,false);
+        document.getElementById('fc-logout').addEventListener('click',()=>db.auth.signOut());
+        attachStudentNavigation();
+        return;
+      }
       const stats = data.counts.map(x=>'<div class="fc-stat"><strong>'+esc(x[1])+'</strong><span>'+esc(x[0])+'</span></div>').join('');
       const previewButton = role === 'direccion' ? '<button id="fc-student-preview" class="fc-secondary" type="button">Vista de alumno</button>' : '';
       root.innerHTML = '<main class="fc-dashboard"><header class="fc-top"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-user"><div><strong>'+esc(profile.full_name || user.email)+'</strong><small>'+esc(roles[role])+'</small></div>'+previewButton+'<button id="fc-logout" class="fc-secondary">Salir</button></div></header><section class="fc-welcome"><div class="fc-kicker">CAMPUS VIRTUAL</div><h1>Hola, '+esc((profile.full_name || '¡bienvenido/a!').split(' ')[0])+'</h1><p>Este es tu espacio de actividad en el Colegio French.</p></section><section class="fc-stats">'+stats+'</section><div class="fc-content">'+data.content+'</div><footer class="fc-footer">French Campus · Información visible según los permisos de tu cuenta.</footer></main>';
