@@ -150,8 +150,63 @@
   }
 
   function pending(user) {
-    root.innerHTML = '<main class="fc-screen"><section class="fc-card fc-pending"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-pending-icon">⌛</div><h1>Esperando confirmación de tu usuario</h1><p class="fc-muted">La cuenta <strong>' + esc(user.email) + '</strong> inició sesión correctamente, pero todavía necesita la aprobación de Dirección.</p><p class="fc-footnote">Cuando tu cuenta sea autorizada, vas a poder ingresar al panel que corresponda. No hace falta volver a registrarte.</p><button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
+    const rejected = user.app_metadata && user.app_metadata.access_status === 'rejected';
+    root.innerHTML = '<main class="fc-screen"><section class="fc-card fc-pending"><div class="fc-brand"><span class="fc-mark">F</span><div><strong>French Campus</strong><small>COLEGIO FRENCH</small></div></div><div class="fc-pending-icon">' + (rejected ? '⛔' : '⌛') + '</div><h1>' + (rejected ? 'Acceso no autorizado' : 'Esperando confirmación de tu usuario') + '</h1><p class="fc-muted">La cuenta <strong>' + esc(user.email) + '</strong> ' + (rejected ? 'no fue autorizada para ingresar al campus.' : 'inició sesión correctamente, pero todavía necesita la aprobación de Dirección.') + '</p><p class="fc-footnote">' + (rejected ? 'Si creés que se trata de un error, comunicate con Dirección del Colegio French.' : 'Cuando Dirección apruebe tu cuenta y le asigne un rol, vas a poder ingresar al panel correspondiente.') + '</p>' + (rejected ? '' : '<button id="fc-refresh-access" class="fc-primary">Actualizar estado</button>') + '<button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
+    const refresh = document.getElementById('fc-refresh-access');
+    if (refresh) refresh.addEventListener('click', async () => {
+      refresh.disabled = true;
+      refresh.textContent = 'Actualizando…';
+      const result = await db.auth.refreshSession();
+      if (result.data && result.data.session) await render(result.data.session.user);
+      else { refresh.disabled = false; refresh.textContent = 'No se pudo actualizar. Reintentar'; }
+    });
     document.getElementById('fc-logout').addEventListener('click', () => db.auth.signOut());
+  }
+
+  async function getAccessRequests() {
+    const result = await db.functions.invoke('manage-access', { body: { action: 'list' } });
+    if (result.error) throw result.error;
+    return result.data && result.data.requests || [];
+  }
+
+  function accessRequestsPanel(requests) {
+    const cards = requests.map((request) =>
+      '<article class="fc-access-request" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #e8edf3">' +
+        '<div><strong>' + esc(request.full_name || request.email || 'Cuenta nueva') + '</strong><p>' + esc(request.email || '') + '</p><small>' + esc(date(request.created_at)) + '</small></div>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><select aria-label="Rol para ' + esc(request.email || 'la cuenta') + '" style="max-width:150px;padding:9px;border:1px solid #dce4ed;border-radius:9px;background:#fff" data-access-role><option value="alumno">Alumno</option><option value="docente">Docente</option><option value="familia">Familia</option></select><button type="button" class="fc-primary fc-access-approve" data-user-id="' + esc(request.id) + '">Aprobar</button><button type="button" class="fc-secondary fc-access-reject" data-user-id="' + esc(request.id) + '">Rechazar</button></div>' +
+      '</article>'
+    ).join('');
+    return '<section class="fc-panel"><div class="fc-panel-head"><h2>Solicitudes de acceso</h2><span>' + requests.length + '</span></div>' +
+      (cards || '<p class="fc-empty">No hay cuentas pendientes de aprobación.</p>') +
+      '<p class="fc-footnote" style="margin-top:12px">Elegí el rol antes de aprobar cada cuenta. Los usuarios no pueden asignárselo por su cuenta.</p></section>';
+  }
+
+  function attachAccessRequestActions(user) {
+    document.querySelectorAll('.fc-access-approve').forEach((button) => button.addEventListener('click', async () => {
+      const card = button.closest('.fc-access-request');
+      const role = card.querySelector('[data-access-role]').value;
+      const buttons = card.querySelectorAll('button');
+      buttons.forEach((item) => { item.disabled = true; });
+      const result = await db.functions.invoke('manage-access', { body: { action: 'approve', userId: button.dataset.userId, role } });
+      if (result.error) {
+        buttons.forEach((item) => { item.disabled = false; });
+        button.textContent = 'Error al aprobar';
+        return;
+      }
+      await render(user);
+    }));
+    document.querySelectorAll('.fc-access-reject').forEach((button) => button.addEventListener('click', async () => {
+      const card = button.closest('.fc-access-request');
+      const buttons = card.querySelectorAll('button');
+      buttons.forEach((item) => { item.disabled = true; });
+      const result = await db.functions.invoke('manage-access', { body: { action: 'reject', userId: button.dataset.userId } });
+      if (result.error) {
+        buttons.forEach((item) => { item.disabled = false; });
+        button.textContent = 'Error al rechazar';
+        return;
+      }
+      await render(user);
+    }));
   }
 
   async function profileFor(user) {
@@ -215,12 +270,13 @@
         section('Entregas recibidas',submissions,(s)=>row(s.content || 'Entrega sin texto','Actividad: '+(activities.find(a=>a.id===s.activity_id)?.title || 'Actividad')+' · Alumno: '+(studentNames[s.student_id] || 'Alumno/a'),date(s.submitted_at)),'Todavía no hay entregas.') +
         section('Alumnos en tus cursos',students,(s)=>row(s.full_name,'Alumno/a inscripto/a',''),'Todavía no hay alumnos inscritos.');
     } else if (role === 'direccion') {
-      const [courses,news,conversations,messages,guardianLinks] = await Promise.all([
+      const [courses,news,conversations,messages,guardianLinks,accessRequests] = await Promise.all([
         rows(db.from('courses').select('id,label,school_year')),
         rows(db.from('announcements').select('id,title,published_at').order('published_at',{ascending:false})),
         rows(db.from('conversations').select('id,subject,parent_user_id,student_id,updated_at,created_at').order('created_at',{ascending:false})),
         rows(db.from('messages').select('id,conversation_id,sender_id,body,created_at').order('created_at')),
-        rows(db.from('guardian_student_links').select('guardian_id'))
+        rows(db.from('guardian_student_links').select('guardian_id')),
+        getAccessRequests()
       ]);
       const guardianIds = [...new Set(guardianLinks.map(x=>x.guardian_id))];
       const guardians = guardianIds.length ? await rows(db.from('profiles').select('id,full_name').in('id',guardianIds)) : [];
@@ -229,7 +285,8 @@
       const profileCount = await db.from('profiles').select('id',{count:'exact',head:true});
       if (profileCount.error) throw profileCount.error;
       counts = [['Perfiles',profileCount.count || 0],['Cursos',courses.length],['Comunicados',news.length],['Conversaciones privadas',conversations.length]];
-      content = section('Cursos del colegio',courses,(c)=>row(c.label,'Año lectivo '+c.school_year,''),'Todavía no hay cursos.') +
+      content = accessRequestsPanel(accessRequests) +
+        section('Cursos del colegio',courses,(c)=>row(c.label,'Año lectivo '+c.school_year,''),'Todavía no hay cursos.') +
         section('Comunicados recientes',news,(n)=>row(n.title,'Publicado para su audiencia',date(n.published_at)),'Todavía no hay comunicados.') +
         communicationPanel(conversations,messages,receipts,user,role,guardianNames) +
         newConversationBlock(user,role,[],guardians);
@@ -270,6 +327,7 @@
       const preview = document.getElementById('fc-student-preview');
       if (preview) preview.addEventListener('click', () => enterStudentPreview(user));
       attachCommunicationForms(user,role);
+      if (role === 'direccion') attachAccessRequestActions(user);
     } catch (error) {
       root.innerHTML = '<main class="fc-screen"><section class="fc-card"><h1>No se pudo cargar el campus</h1><p class="fc-muted">'+esc(error.message || 'Error de conexión o permisos.')+'</p><button id="fc-retry" class="fc-primary">Volver a intentar</button><button id="fc-logout" class="fc-secondary">Cerrar sesión</button></section></main>';
       document.getElementById('fc-retry').addEventListener('click',()=>render(user));
