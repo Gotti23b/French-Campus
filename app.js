@@ -85,15 +85,15 @@
       counts = [['Cursos asignados',ids.length],['Actividades',activities.length],['Entregas recibidas',submissions.length]];
       content = section('Mis cursos y materias',assignments,(a)=>row(a.courses && a.courses.label || 'Curso',a.subjects && a.subjects.name || 'Materia asignada',''),'Dirección todavía no asignó cursos.') +
         section('Actividades',activities,(a)=>row(a.title,(a.subjects && a.subjects.name || 'Materia')+' · '+(a.courses && a.courses.label || 'Curso'),date(a.due_at)),'Todavía no hay actividades.') +
-        section('Entregas recibidas',submissions,(s)=>row(s.content || 'Entrega sin texto','Actividad: '+(activities.find(a=>a.id===s.activity_id)?.title || 'Actividad'),'Alumno: '+s.student_id.slice(0,8)+'…'),date(s.submitted_at)),'Todavía no hay entregas.') +
+        section('Entregas recibidas',submissions,(s)=>row(s.content || 'Entrega sin texto','Actividad: '+(activities.find(a=>a.id===s.activity_id)?.title || 'Actividad')+' · Alumno: '+s.student_id.slice(0,8)+'…',date(s.submitted_at)),'Todavía no hay entregas.'),'Todavía no hay entregas.') +
         section('Alumnos en tus cursos',enrollments.map(x=>({student_id:x.student_id,course_id:x.course_id})),(e)=>row('Alumno/a', 'Curso asignado',e.student_id.slice(0,8)+'…'),'Todavía no hay alumnos inscritos.');
     } else if (role === 'direccion') {
-      const [profileCount,courses,news,conversations] = await Promise.all([
-        db.from('profiles').select('id',{count:'exact',head:true}),
+      const [courses,news,conversations] = await Promise.all([
         rows(db.from('courses').select('id,label,school_year')),
         rows(db.from('announcements').select('id,title,published_at').order('published_at',{ascending:false})),
         rows(db.from('conversations').select('id,subject,updated_at').order('updated_at',{ascending:false}))
       ]);
+      const profileCount = await db.from('profiles').select('id',{count:'exact',head:true});
       if (profileCount.error) throw profileCount.error;
       counts = [['Perfiles',profileCount.count || 0],['Cursos',courses.length],['Comunicados',news.length],['Conversaciones privadas',conversations.length]];
       content = section('Cursos del colegio',courses,(c)=>row(c.label,'Año lectivo '+c.school_year,''),'Todavía no hay cursos.') +
