@@ -10,13 +10,28 @@
   const section = (title, items, render, empty) => '<section class="fc-panel"><div class="fc-panel-head"><h2>' + esc(title) + '</h2><span>' + items.length + '</span></div>' + (items.length ? '<div class="fc-list">' + items.map(render).join('') + '</div>' : '<p class="fc-empty">' + esc(empty) + '</p>') + '</section>';
   async function rows(query) { const r = await query; if (r.error) throw r.error; return r.data || []; }
 
-  function communicationPanel(conversations, messages, user, role, familyNames) {
+  async function markMessagesRead(messages, user) {
+    const incoming = messages.filter((message) => message.sender_id !== user.id);
+    if (!incoming.length) return [];
+    const ids = incoming.map((message) => message.id);
+    const existing = await rows(db.from('message_reads').select('message_id').eq('user_id', user.id).in('message_id', ids));
+    const seen = new Set(existing.map((item) => item.message_id));
+    const missing = ids.filter((id) => !seen.has(id));
+    if (missing.length) {
+      const result = await db.from('message_reads').insert(missing.map((id) => ({message_id:id,user_id:user.id})));
+      if (result.error) throw result.error;
+    }
+    return rows(db.from('message_reads').select('message_id,user_id').in('message_id', ids));
+  }
+
+  function communicationPanel(conversations, messages, receipts, user, role, familyNames) {
     const cards = conversations.map((conversation) => {
       const thread = messages.filter((message) => message.conversation_id === conversation.id);
       const history = thread.map((message) => {
         const mine = message.sender_id === user.id;
         const sender = mine ? 'Vos' : (role === 'familia' ? 'Dirección' : (familyNames[conversation.parent_user_id] || 'Familia'));
-        return '<div class="fc-message-bubble ' + (mine ? 'mine' : '') + '"><strong>' + esc(sender) + '</strong><p>' + esc(message.body) + '</p><small>' + esc(date(message.created_at)) + '</small></div>';
+        const readByOther = receipts.some((receipt) => receipt.message_id === message.id && (role === 'familia' ? receipt.user_id !== user.id : receipt.user_id === conversation.parent_user_id));
+        return '<div class="fc-message-bubble ' + (mine ? 'mine' : '') + '"><strong>' + esc(sender) + '</strong><p>' + esc(message.body) + '</p><small>' + esc(date(message.created_at)) + (mine && readByOther ? ' · Leído' : '') + '</small></div>';
       }).join('');
       return '<article class="fc-thread"><div class="fc-thread-title"><strong>' + esc(conversation.subject) + '</strong><small>' + esc(date(conversation.updated_at || conversation.created_at)) + '</small></div>' +
         (history || '<p class="fc-empty">Todavía no hay mensajes.</p>') +
@@ -160,10 +175,11 @@
         rows(db.from('messages').select('id,conversation_id,sender_id,body,created_at').order('created_at'))
       ]);
       const names = Object.fromEntries(children.map(x=>[x.id,x.full_name]));
+      const receipts = await markMessagesRead(messages,user);
       counts = [['Hijos vinculados',children.length],['Calificaciones',grades.length],['Conversaciones',conversations.length]];
       content = section('Mis hijos',children,(c)=>row(c.full_name,'Alumno/a vinculado/a al grupo familiar',''),'Dirección todavía no vinculó alumnos.') +
         section('Calificaciones',grades,(g)=>row((names[g.student_id] || 'Alumno/a')+' · '+(g.subjects && g.subjects.name || 'Materia'),g.title+' · '+g.score+' / '+g.max_score,date(g.recorded_at)),'Todavía no hay calificaciones.') +
-        communicationPanel(conversations,messages,user,role,{}) +
+        communicationPanel(conversations,messages,receipts,user,role,{}) +
         newConversationBlock(user,role,children,[]) +
         section('Novedades',news,(n)=>row(n.title,n.body,date(n.published_at)),'No hay comunicados nuevos.');
     } else if (role === 'docente') {
@@ -194,12 +210,13 @@
       const guardianIds = [...new Set(guardianLinks.map(x=>x.guardian_id))];
       const guardians = guardianIds.length ? await rows(db.from('profiles').select('id,full_name').in('id',guardianIds)) : [];
       const guardianNames = Object.fromEntries(guardians.map(x=>[x.id,x.full_name]));
+      const receipts = await markMessagesRead(messages,user);
       const profileCount = await db.from('profiles').select('id',{count:'exact',head:true});
       if (profileCount.error) throw profileCount.error;
       counts = [['Perfiles',profileCount.count || 0],['Cursos',courses.length],['Comunicados',news.length],['Conversaciones privadas',conversations.length]];
       content = section('Cursos del colegio',courses,(c)=>row(c.label,'Año lectivo '+c.school_year,''),'Todavía no hay cursos.') +
         section('Comunicados recientes',news,(n)=>row(n.title,'Publicado para su audiencia',date(n.published_at)),'Todavía no hay comunicados.') +
-        communicationPanel(conversations,messages,user,role,guardianNames) +
+        communicationPanel(conversations,messages,receipts,user,role,guardianNames) +
         newConversationBlock(user,role,[],guardians);
     }
     return {content,counts};
