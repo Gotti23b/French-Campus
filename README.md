@@ -1,6 +1,6 @@
 # French Campus
 
-**Versión:** 0.0.6  
+**Versión:** 0.0.7  
 **Estado:** primera conexión con Supabase y paneles iniciales por rol
 
 French Campus es una propuesta de campus virtual para el Colegio French.
@@ -22,7 +22,7 @@ La navegación entre secciones funciona en la misma página, sin recargar el sit
 
 ## Importante
 
-El acceso se conecta al proyecto Supabase French Campus. La web permite iniciar sesión y muestra información según el rol asignado en `app_metadata`. No hay registro público. La estructura de datos y las políticas RLS están creadas, pero la gestión completa (altas, carga de notas, publicación, corrección de entregas y mensajería avanzada) sigue en desarrollo. No cargar datos personales reales hasta que el colegio valide el sistema.
+El acceso se conecta al proyecto Supabase French Campus. La web permite iniciar sesión con correo y contraseña o mediante Google. Las cuentas sin rol autorizado ven la pantalla «Esperando confirmación de tu usuario». El rol se asigna de forma segura desde `app_metadata`; no hay registro público. La estructura de datos y las políticas RLS están creadas, pero la gestión completa (altas, carga de notas, publicación, corrección de entregas y mensajería avanzada) sigue en desarrollo. No cargar datos personales reales hasta que el colegio valide el sistema.
 
 ## Modelo de datos
 
