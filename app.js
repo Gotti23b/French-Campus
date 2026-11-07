@@ -85,7 +85,7 @@
       counts = [['Cursos asignados',ids.length],['Actividades',activities.length],['Entregas recibidas',submissions.length]];
       content = section('Mis cursos y materias',assignments,(a)=>row(a.courses && a.courses.label || 'Curso',a.subjects && a.subjects.name || 'Materia asignada',''),'Dirección todavía no asignó cursos.') +
         section('Actividades',activities,(a)=>row(a.title,(a.subjects && a.subjects.name || 'Materia')+' · '+(a.courses && a.courses.label || 'Curso'),date(a.due_at)),'Todavía no hay actividades.') +
-        section('Entregas recibidas',submissions,(s)=>row(s.content || 'Entrega sin texto','Actividad: '+(activities.find(a=>a.id===s.activity_id)?.title || 'Actividad')+' · Alumno: '+s.student_id.slice(0,8)+'…',date(s.submitted_at)),'Todavía no hay entregas.'),'Todavía no hay entregas.') +
+        section('Entregas recibidas',submissions,(s)=>row(s.content || 'Entrega sin texto','Actividad: '+(activities.find(a=>a.id===s.activity_id)?.title || 'Actividad')+' · Alumno: '+s.student_id.slice(0,8)+'…',date(s.submitted_at)),'Todavía no hay entregas.') +
         section('Alumnos en tus cursos',enrollments.map(x=>({student_id:x.student_id,course_id:x.course_id})),(e)=>row('Alumno/a', 'Curso asignado',e.student_id.slice(0,8)+'…'),'Todavía no hay alumnos inscritos.');
     } else if (role === 'direccion') {
       const [courses,news,conversations] = await Promise.all([
