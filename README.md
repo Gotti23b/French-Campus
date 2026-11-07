@@ -1,7 +1,7 @@
 # French Campus
 
-**Versión:** 0.0.8  
-**Estado:** primera conexión con Supabase y paneles iniciales por rol
+**Versión:** 0.0.9  
+**Estado:** gestión académica de Dirección y herramientas docentes (gestion.js)
 
 French Campus es una propuesta de campus virtual para el Colegio French.
 

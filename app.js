@@ -401,6 +401,7 @@
       document.getElementById('fc-logout').addEventListener('click',()=>db.auth.signOut());
       const preview = document.getElementById('fc-student-preview');
       if (preview) preview.addEventListener('click', () => enterStudentPreview(user));
+      if (window.FCGestion) window.FCGestion.mount(db,user,role,()=>render(user));
       attachCommunicationForms(user,role);
       if (role === 'direccion') attachAccessRequestActions(user);
     } catch (error) {
