@@ -1,6 +1,6 @@
 # French Campus
 
-**Versión:** 0.0.7  
+**Versión:** 0.0.8  
 **Estado:** primera conexión con Supabase y paneles iniciales por rol
 
 French Campus es una propuesta de campus virtual para el Colegio French.
@@ -8,6 +8,7 @@ French Campus es una propuesta de campus virtual para el Colegio French.
 ## Secciones disponibles
 
 - Inicio: panel principal del estudiante.
+- Vista previa de alumno disponible para Dirección, con datos de demostración y sin cambiar el rol de la cuenta.
 - Mis materias: tarjetas de materias.
 - Actividades: listado visual de tareas.
 - Calendario: vista mensual de ejemplo.
